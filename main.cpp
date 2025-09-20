@@ -40,14 +40,26 @@ int main(int argc, char *argv[])
     QVBoxLayout horizontalUrlL = QVBoxLayout(&w);
     horizontalUrlL.setDirection(QVBoxLayout::Direction::LeftToRight);
 
+    QVBoxLayout pranaL = QVBoxLayout(&w);
+    QLabel pranaLabel = QLabel(&w);
+    pranaLabel.setText("Prana (God's power):");
     QProgressBar pranaBar = QProgressBar(&w);
     pranaBar.setMinimum(0);
     pranaBar.setMaximum(100);
     pranaBar.setAlignment(Qt::Alignment::enum_type::AlignBottom);
+    pranaBar.setToolTip("Prana");
+    pranaL.addWidget(&pranaLabel);
+    pranaL.addWidget(&pranaBar);
 
+    QVBoxLayout healthL = QVBoxLayout(&w);
+    QLabel healthLabel = QLabel(&w);
+    healthLabel.setText("Health: ");
     QProgressBar healthBar = QProgressBar(&w);
     healthBar.setMinimum(0);
     healthBar.setAlignment(Qt::Alignment::enum_type::AlignBottom);
+    healthBar.setToolTip("Health");
+    healthL.addWidget(&healthLabel);
+    healthL.addWidget(&healthBar);
 
     QLabel label = QLabel(&w);
     label.setAlignment(Qt::Alignment::enum_type::AlignLeft);
@@ -60,7 +72,11 @@ int main(int argc, char *argv[])
     urlTokenLine.setPlaceholderText("godvill token");
     urlTokenLine.setText("75446b02cad4");
 
-    RefreshGodProfileButton refreshbtn = RefreshGodProfileButton(&label, &pranaBar, &healthBar, &isUrlToken, &urlTokenLine, &w);
+    QLineEdit godNameLine = QLineEdit(&w);
+    godNameLine.setPlaceholderText("god name");
+    godNameLine.setText("Тальзеур");
+
+    RefreshGodProfileButton refreshbtn = RefreshGodProfileButton(&label, &pranaBar, &healthBar, &isUrlToken, &godNameLine, &urlTokenLine, &w);
     refreshbtn.setText(translator.tr("Refresh"));
 
     QFileDialog fileDial = QFileDialog(&w);
@@ -69,10 +85,11 @@ int main(int argc, char *argv[])
 
     refreshbtn.setOpenFileBtn(openFileBtn);
 
-    horizontalBarL.addWidget(&healthBar);
-    horizontalBarL.addWidget(&pranaBar);
+    horizontalBarL.addLayout(&healthL);
+    horizontalBarL.addLayout(&pranaL);
 
     horizontalUrlL.addWidget(&isUrlToken);
+    horizontalUrlL.addWidget(&godNameLine);
     horizontalUrlL.addWidget(&urlTokenLine);
 
     layout.addWidget(&label);

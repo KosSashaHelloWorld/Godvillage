@@ -51,7 +51,7 @@ public:
 
     }
 
-    GodProfile(QString url, QString urlToken) : url(url), urlToken(urlToken), mode(Mode::urlMode)
+    GodProfile(QString url, QString godName, QString urlToken) : url(url), godName(godName), urlToken(urlToken), mode(Mode::urlMode)
     {
 
     }
@@ -132,7 +132,9 @@ private:
         auto curl = curl_easy_init();
         if (curl)
         {
-            curl_easy_setopt(curl, CURLOPT_URL, (url + urlToken).toStdString().c_str());
+            QString urlFull = url + urlToken + "/" + godName;
+            qInfo() << "Curlign : " << urlFull;
+            curl_easy_setopt(curl, CURLOPT_URL, (urlFull).toStdString().c_str());
             curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
             curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 50L);
             curl_easy_setopt(curl, CURLOPT_TCP_KEEPALIVE, 1L);
@@ -174,14 +176,16 @@ private:
 class RefreshGodProfileButton : public QPushButton
 {
     Q_OBJECT
-    const std::string gvAPIurl = "https://godville.net/gods/api/%D0%A2%D0%B0%D0%BB%D1%8C%D0%B7%D0%B5%D1%83%D1%80/";
+    const std::string gvAPIurl = "https://godville.net/gods/api/";
     QProgressBar* pranaBar;
     QProgressBar* healthBar;
     QLabel* label;
     GodProfile* profile;
     const QCheckBox* isUrlToken;
     const QLineEdit* urlTokenLine;
+    const QLineEdit* godNameLine;
     QString urlToken;
+    QString godName;
     Widget* parentWidget;
     QString filePath;
 public:
@@ -192,6 +196,7 @@ public:
             QProgressBar* healthBar,
             QCheckBox* isUrlToken,
             QLineEdit* urlTokenLine,
+            QLineEdit* godNameLine,
             Widget* parent = nullptr
         ) :
         label(label),
@@ -199,6 +204,7 @@ public:
         healthBar(healthBar),
         isUrlToken(isUrlToken),
         urlTokenLine(urlTokenLine),
+        godNameLine(godNameLine),
         QPushButton(parent),
         parentWidget(parent)
     {
@@ -235,7 +241,8 @@ private slots:
         if (isUrlToken->isChecked())
         {
             urlToken = urlTokenLine->text();
-            profile = new GodProfile(gvAPIurl.c_str(), urlToken.toStdString().c_str());
+            godName = godNameLine->text();
+            profile = new GodProfile(gvAPIurl.c_str(), godName.toStdString().c_str(), urlToken.toStdString().c_str());
         }
         else
         {
@@ -246,7 +253,7 @@ public slots:
     void updateUrlToken()
     {
         urlToken = urlTokenLine->text();
-        profile = new GodProfile(gvAPIurl.c_str(), urlToken.toStdString().c_str());
+        profile = new GodProfile(gvAPIurl.c_str(), godName.toStdString().c_str(), urlToken.toStdString().c_str());
     }
 };
 
