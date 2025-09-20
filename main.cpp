@@ -70,11 +70,9 @@ int main(int argc, char *argv[])
     isUrlToken.setToolTip("In case you doesn't have a profile.json check it. It's not recommended to click more often than once per 20 sec if you use url instead of file");
     QLineEdit urlTokenLine = QLineEdit(&w);
     urlTokenLine.setPlaceholderText("godvill token");
-    urlTokenLine.setText("75446b02cad4");
 
     QLineEdit godNameLine = QLineEdit(&w);
     godNameLine.setPlaceholderText("god name");
-    godNameLine.setText("Тальзеур");
 
     RefreshGodProfileButton refreshbtn = RefreshGodProfileButton(&label, &pranaBar, &healthBar, &isUrlToken, &godNameLine, &urlTokenLine, &w);
     refreshbtn.setText(translator.tr("Refresh"));
