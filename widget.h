@@ -17,6 +17,15 @@
 #include <curl/curl.h>
 #include <QCheckBox>
 #include <QLineEdit>
+#include <QFileDialog>
+
+class Widget : public QWidget
+{
+    Q_OBJECT
+public:
+    Widget(QWidget *parent = nullptr);
+    ~Widget();
+};
 
 class GodProfile : QObject
 {
@@ -173,6 +182,8 @@ class RefreshGodProfileButton : public QPushButton
     const QCheckBox* isUrlToken;
     const QLineEdit* urlTokenLine;
     QString urlToken;
+    Widget* parentWidget;
+    QString filePath;
 public:
     RefreshGodProfileButton
         (
@@ -181,21 +192,35 @@ public:
             QProgressBar* healthBar,
             QCheckBox* isUrlToken,
             QLineEdit* urlTokenLine,
-            QWidget* parent = nullptr
+            Widget* parent = nullptr
         ) :
         label(label),
         pranaBar(pranaBar),
         healthBar(healthBar),
         isUrlToken(isUrlToken),
         urlTokenLine(urlTokenLine),
-        QPushButton(parent)
+        QPushButton(parent),
+        parentWidget(parent)
     {
         connect(this, SIGNAL(clicked()), this, SLOT(handleClick()));
-        connect(isUrlToken, &QCheckBox::clicked, this, &RefreshGodProfileButton::reinitGodProfile);
+        connect(isUrlToken, &QCheckBox::clicked, this, &RefreshGodProfileButton::onIsUrlCheckBoxChanged);
         connect(urlTokenLine, &QLineEdit::editingFinished, this, &RefreshGodProfileButton::updateUrlToken);
-        reinitGodProfile();
+        profile = new GodProfile(filePath);
     }
+    void setOpenFileBtn(QPushButton* openFileBtn)
+    {
+        connect(openFileBtn, &QPushButton::clicked, this, &RefreshGodProfileButton::openFile);
+    }
+
 private slots:
+
+    void openFile()
+    {
+        filePath = QFileDialog::getOpenFileName(this, QTranslator::tr("Open profile file"), "", QTranslator::tr("Profile (*.json)"));
+        qInfo() << "File opened:\n\t" << filePath;
+        profile = new GodProfile(filePath);
+        emit clicked();
+    }
     void handleClick()
     {
         profile->update();
@@ -205,7 +230,7 @@ private slots:
         healthBar->setValue(profile->curHealth);
         qInfo() << "God profile refreshed\n";
     }
-    void reinitGodProfile()
+    void onIsUrlCheckBoxChanged()
     {
         if (isUrlToken->isChecked())
         {
@@ -214,9 +239,10 @@ private slots:
         }
         else
         {
-            profile = new GodProfile("/home/alex/Repos/Games/Godvill/profile.json");
+            profile = new GodProfile(filePath);
         }
     }
+public slots:
     void updateUrlToken()
     {
         urlToken = urlTokenLine->text();
@@ -226,12 +252,7 @@ private slots:
 
 
 
-class Widget : public QWidget
-{
-    Q_OBJECT
 
-public:
-    Widget(QWidget *parent = nullptr);
-    ~Widget();
-};
+
+
 #endif // WIDGET_H

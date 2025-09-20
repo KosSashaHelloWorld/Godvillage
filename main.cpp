@@ -8,6 +8,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QVBoxLayout>
+#include <QFileDialog>
 
 
 int main(int argc, char *argv[])
@@ -23,8 +24,12 @@ int main(int argc, char *argv[])
             break;
         }
     }
-    QWidget w;
+
+    Widget w = Widget();
     w.show();
+
+    QPushButton* openFileBtn = new QPushButton(&w);
+    openFileBtn->setText(translator.tr("Open profile file"));
 
     QVBoxLayout layout = QVBoxLayout(&w);
     layout.setAlignment(Qt::Alignment::enum_type::AlignAbsolute);
@@ -58,6 +63,12 @@ int main(int argc, char *argv[])
     RefreshGodProfileButton refreshbtn = RefreshGodProfileButton(&label, &pranaBar, &healthBar, &isUrlToken, &urlTokenLine, &w);
     refreshbtn.setText(translator.tr("Refresh"));
 
+    QFileDialog fileDial = QFileDialog(&w);
+    fileDial.selectNameFilter("Profile (*.json)");
+    fileDial.setFileMode(QFileDialog::FileMode::ExistingFile);
+
+    refreshbtn.setOpenFileBtn(openFileBtn);
+
     horizontalBarL.addWidget(&healthBar);
     horizontalBarL.addWidget(&pranaBar);
 
@@ -68,6 +79,7 @@ int main(int argc, char *argv[])
     layout.addLayout(&horizontalBarL);
     layout.addWidget(&refreshbtn);
     layout.addLayout(&horizontalUrlL);
+    layout.addWidget(openFileBtn);
 
     w.resize(700, 230);
 
