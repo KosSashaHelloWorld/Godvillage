@@ -2,7 +2,12 @@
 #include <QApplication>
 #include <QCheckBox>
 #include <QLineEdit>
-
+#include <QLocale>
+#include <QTranslator>
+#include <QProgressBar>
+#include <QPushButton>
+#include <QLabel>
+#include <QVBoxLayout>
 
 
 int main(int argc, char *argv[])
@@ -24,6 +29,12 @@ int main(int argc, char *argv[])
     QVBoxLayout layout = QVBoxLayout(&w);
     layout.setAlignment(Qt::Alignment::enum_type::AlignAbsolute);
 
+    QVBoxLayout horizontalBarL = QVBoxLayout(&w);
+    horizontalBarL.setDirection(QVBoxLayout::Direction::LeftToRight);
+
+    QVBoxLayout horizontalUrlL = QVBoxLayout(&w);
+    horizontalUrlL.setDirection(QVBoxLayout::Direction::LeftToRight);
+
     QProgressBar pranaBar = QProgressBar(&w);
     pranaBar.setMinimum(0);
     pranaBar.setMaximum(100);
@@ -36,22 +47,27 @@ int main(int argc, char *argv[])
     QLabel label = QLabel(&w);
     label.setAlignment(Qt::Alignment::enum_type::AlignLeft);
 
-    GodProfile profile = GodProfile("/home/alex/Repos/Games/Godvill/profile.json");
 
     QCheckBox isUrlToken = QCheckBox(&w);
-    isUrlToken.setText("Use url instead of file");
+    isUrlToken.setText("Use url instead of file (tooltip)");
+    isUrlToken.setToolTip("In case you doesn't have a profile.json check it. It's not recommended to click more often than once per 20 sec if you use url instead of file");
     QLineEdit urlTokenLine = QLineEdit(&w);
     urlTokenLine.setPlaceholderText("godvill token");
+    urlTokenLine.setText("75446b02cad4");
 
-    RefreshPranaButton refreshbtn = RefreshPranaButton(&label, &pranaBar, &healthBar, &profile, &w);
+    RefreshGodProfileButton refreshbtn = RefreshGodProfileButton(&label, &pranaBar, &healthBar, &isUrlToken, &urlTokenLine, &w);
     refreshbtn.setText(translator.tr("Refresh"));
 
+    horizontalBarL.addWidget(&healthBar);
+    horizontalBarL.addWidget(&pranaBar);
+
+    horizontalUrlL.addWidget(&isUrlToken);
+    horizontalUrlL.addWidget(&urlTokenLine);
+
     layout.addWidget(&label);
-    layout.addWidget(&healthBar);
-    layout.addWidget(&pranaBar);
+    layout.addLayout(&horizontalBarL);
     layout.addWidget(&refreshbtn);
-    layout.addWidget(&isUrlToken);
-    layout.addWidget(&urlTokenLine);
+    layout.addLayout(&horizontalUrlL);
 
     w.resize(700, 230);
 

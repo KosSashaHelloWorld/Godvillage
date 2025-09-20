@@ -5,7 +5,6 @@
 #include <QLocale>
 #include <QTranslator>
 #include <QProgressBar>
-#include <QButtonGroup>
 #include <QPushButton>
 #include <QFile>
 #include <QJsonDocument>
@@ -15,7 +14,9 @@
 #include <QVBoxLayout>
 #include <QObject>
 #include <QDebug>
-#include <cpr/api.h>
+#include <curl/curl.h>
+#include <QCheckBox>
+#include <QLineEdit>
 
 class GodProfile : QObject
 {
@@ -75,7 +76,7 @@ private:
     const QString filePath;
     const QString url;
     const QString urlToken;
-    const Mode mode;
+    Mode mode = Mode::fileMode;
 
     QJsonObject readJsonObject()
     {
@@ -89,7 +90,7 @@ private:
         }
         else
         {
-            qDebug("GodProfile mode error");
+            qInfo() << "GodProfile mode error";
             return QJsonObject();
         }
     }
@@ -104,23 +105,42 @@ private:
             qWarning() << "JSON parse error: " << parseError.errorString();
             return QJsonObject();
         }
-        qInfo("File parsed");
+        qInfo() << "Json object parsed from string";
 
         QJsonObject jsonObj = jsonDoc.object();
 
         return jsonObj;
     }
 
+    static size_t writeFunction(void* ptr, size_t size, size_t nmemb, std::string* data) {
+        data->append((char*)ptr, size * nmemb);
+        return size * nmemb;
+    }
+
     QJsonObject readJsonObjectFromUrl(const QString url, const QString urlToken)
     {
-        cpr::Response r = cpr::Get(cpr::Url((url + urlToken).toStdString()));
-        if (r.status_code != 200)
+        curl_global_init(CURL_GLOBAL_DEFAULT);
+        auto curl = curl_easy_init();
+        if (curl)
         {
-            qInfo("%s%ld", "Error: status code of request is ", r.status_code);
-            return QJsonObject();
+            curl_easy_setopt(curl, CURLOPT_URL, (url + urlToken).toStdString().c_str());
+            curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+            curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 50L);
+            curl_easy_setopt(curl, CURLOPT_TCP_KEEPALIVE, 1L);
+            std::string response;
+            std::string header_string;
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunction);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+            curl_easy_setopt(curl, CURLOPT_HEADERDATA, &header_string);
+            curl_easy_perform(curl);
+            curl_easy_cleanup(curl);
+            curl_global_cleanup();
+            qInfo() << "Url readed";
+            return readJsonObjectFromString(QString(response.c_str()));
         }
 
-        return readJsonObjectFromString(r.text.c_str());
+        qInfo() << "Error: curl didn't initialize";
+        return QJsonObject();
     }
 
     QJsonObject readJsonObjectFromFile(const QString filePath)
@@ -134,7 +154,7 @@ private:
 
         QByteArray jsonData = file.readAll();
         file.close();
-        qInfo("File readed");
+        qInfo() << "File readed";
 
         return readJsonObjectFromString(jsonData);
     }
@@ -142,18 +162,38 @@ private:
 
 
 
-class RefreshPranaButton : public QPushButton
+class RefreshGodProfileButton : public QPushButton
 {
     Q_OBJECT
+    const std::string gvAPIurl = "https://godville.net/gods/api/%D0%A2%D0%B0%D0%BB%D1%8C%D0%B7%D0%B5%D1%83%D1%80/";
     QProgressBar* pranaBar;
     QProgressBar* healthBar;
     QLabel* label;
     GodProfile* profile;
+    const QCheckBox* isUrlToken;
+    const QLineEdit* urlTokenLine;
+    QString urlToken;
 public:
-    RefreshPranaButton(QLabel* label, QProgressBar* pranaBar, QProgressBar* healthBar, GodProfile* profile, QWidget* parent = nullptr) :
-        QPushButton(parent), pranaBar(pranaBar), healthBar(healthBar), label(label), profile(profile)
+    RefreshGodProfileButton
+        (
+            QLabel* label,
+            QProgressBar* pranaBar,
+            QProgressBar* healthBar,
+            QCheckBox* isUrlToken,
+            QLineEdit* urlTokenLine,
+            QWidget* parent = nullptr
+        ) :
+        label(label),
+        pranaBar(pranaBar),
+        healthBar(healthBar),
+        isUrlToken(isUrlToken),
+        urlTokenLine(urlTokenLine),
+        QPushButton(parent)
     {
         connect(this, SIGNAL(clicked()), this, SLOT(handleClick()));
+        connect(isUrlToken, &QCheckBox::clicked, this, &RefreshGodProfileButton::reinitGodProfile);
+        connect(urlTokenLine, &QLineEdit::editingFinished, this, &RefreshGodProfileButton::updateUrlToken);
+        reinitGodProfile();
     }
 private slots:
     void handleClick()
@@ -163,7 +203,24 @@ private slots:
         pranaBar->setValue(profile->prana);
         healthBar->setMaximum(profile->maxHealth);
         healthBar->setValue(profile->curHealth);
-        qInfo("handleClick called");
+        qInfo() << "God profile refreshed\n";
+    }
+    void reinitGodProfile()
+    {
+        if (isUrlToken->isChecked())
+        {
+            urlToken = urlTokenLine->text();
+            profile = new GodProfile(gvAPIurl.c_str(), urlToken.toStdString().c_str());
+        }
+        else
+        {
+            profile = new GodProfile("/home/alex/Repos/Games/Godvill/profile.json");
+        }
+    }
+    void updateUrlToken()
+    {
+        urlToken = urlTokenLine->text();
+        profile = new GodProfile(gvAPIurl.c_str(), urlToken.toStdString().c_str());
     }
 };
 

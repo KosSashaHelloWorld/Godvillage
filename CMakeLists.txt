@@ -8,10 +8,13 @@ set(CMAKE_AUTORCC ON)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CURL_INCLUDE_DIR "/usr/include")
+set(CURL_LIBRARIES "/usr/lib/x86_64-linux-gnu/libcurl.so")
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
-find_package(cpr REQUIRED)
+#find_package(cpr REQUIRED)
+#find_package(curl REQUIRED)
 
 set(TS_FILES Godvillage_en_US.ts)
 
@@ -49,8 +52,10 @@ else()
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
 
-target_link_libraries(Godvillage PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-target_link_libraries(Godvillage PRIVATE cpr::cpr)
+target_link_libraries(Godvillage PRIVATE Qt${QT_VERSION_MAJOR}::Widgets ${CURL_LIBRARIES})
+#target_link_libraries(Godvillage PRIVATE cpr::cpr)
+#target_link_libraries(Godvillage PRIVATE curl::curl)
+include_directories(${CURL_INCLUDE_DIR})
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
